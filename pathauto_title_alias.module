@@ -1,0 +1,209 @@
+<?php
+
+/**
+ * @file
+ * Defines a simple title alias field type.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function pathauto_title_alias_menu() {
+  $items['pathauto-title-alias-lookup/%'] = array(
+    'title' => 'Pathauto Title Alias Lookup',
+    'page callback' => 'pathauto_title_alias_lookup',
+    'page arguments' => array(1),
+    'access arguments' => array('generate pathauto title aliases'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function pathauto_title_alias_permission() {
+  return array(
+    'generate pathauto title aliases' => array(
+      'title' => t('Generate pathauto title aliases'),
+      'description' => t('Allow the user to generate the aliases.'),
+    ),
+  );
+}
+
+/**
+ * Callback function for looking up the pathauto version of the alias.
+ */
+function pathauto_title_alias_lookup($title) {
+  print _pathauto_title_alias_clean($title);
+  exit();
+}
+
+/**
+ * Implementation of hook_field_info().
+ */
+function pathauto_title_alias_field_info() {
+  return array(
+    'pathauto_title_alias' => array(
+      'label' => t('Pathauto Title Alias'),
+      'description' => t('This field stores a title alias in the database.'),
+      'default_widget' => 'pathauto_title_alias_form',
+      'default_formatter' => 'pathauto_title_alias_default',
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function pathauto_title_alias_field_widget_info() {
+  return array(
+    'pathauto_title_alias_form' => array(
+      'label' => t('Default'),
+      'field types' => array('pathauto_title_alias'),
+      'behaviors' => array(
+        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
+        //Use FIELD_BEHAVIOR_NONE for no default value.
+        'default value' => FIELD_BEHAVIOR_DEFAULT,
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function pathauto_title_alias_field_formatter_info() {
+  return array(
+    'pathauto_title_alias_default' => array(
+      'label' => t('Default'),
+      'field types' => array('pathauto_title_alias'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function pathauto_title_alias_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+
+  switch ($display['type']) {
+    case 'pathauto_title_alias_default':
+      foreach ($items as $delta => $item) {
+        $element[$delta]['#markup'] = _pathauto_title_alias_clean($item['alias']);
+      }
+      break;
+  }
+
+  return $element;
+}
+
+/**
+ * Implementation of hook_field_is_empty().
+ */
+function pathauto_title_alias_field_is_empty($item, $field) {
+  if ($field['type'] == 'pathauto_title_alias') {
+    // Only empty if the alias field is empty.
+    if (empty($item['alias'])) {
+       return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Implementation of hook_field_settings_form().
+ */
+function pathauto_title_alias_field_settings_form($field, $instance, $has_data) {
+  if ($field['type'] == 'pathauto_title_alias') {
+    $settings = $field['settings'];
+    $form = array();
+    return $form;
+  }
+}
+
+/**
+ * Implementation of hook_field_validate().
+ */
+function pathauto_title_alias_field_validate($obj_type, $object, $field, $instance, $langcode, &$items, &$errors) {
+  if ($field['type'] == 'pathauto_title_alias') {
+
+  }
+}
+
+/**
+ * Implementation of hook_field_presave().
+ */
+function pathauto_title_alias_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  if ($field['type'] == 'pathauto_title_alias') {
+    foreach($items as $delta => $item) {
+      // Need to change the value into the pathauto version before save.
+      $items[$delta]['alias'] = _pathauto_title_alias_clean($item['alias']);
+    }
+  }
+}
+
+/**
+ * Implementation of hook_field_widget_form().
+ */
+function pathauto_title_alias_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $base = $element;
+  if ($instance['widget']['type'] == 'pathauto_title_alias_form') {
+    $widget = $instance['widget'];
+    $settings = $widget['settings'];
+
+    // Add a custom label since we don't have one for our element.
+    $label = $instance['label'];
+    $label .= ($instance['required']) ? ' <span class="form-required" title="This field is required.">*</span>' : '';
+    $element['label'] = array(
+      '#markup' => '<label>' . $label . '</label>',
+    );
+
+    // Create a checkbox for people to choose if they want to generate or not.
+    $element['use_autogenerate'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Automatically Generate Alias'),
+      '#default_value' => isset($items[$delta]['use_autogenerate']) ? $items[$delta]['use_autogenerate'] : 1,
+    );
+
+    // Create a textbox to put the alias in.
+    // Use states to disable it if the auto generate checkbox is not checked.
+    // Also add our custom js.
+    $element['alias'] = array(
+      '#type' => 'textfield',
+      '#default_value' => isset($items[$delta]['alias']) ? $items[$delta]['alias'] : '',
+      '#required' => $instance['required'],
+      '#attached' => array(
+        'js' => array(
+          drupal_get_path('module', 'pathauto_title_alias') . '/js/pathauto_title_alias.js' => array(
+            'type' => 'file',
+          ),
+        ),
+      ),
+      '#states' => array(
+        'disabled' => array(
+          ':input[name="' . $field['field_name'] . '[' . $langcode . '][' . $delta . '][use_autogenerate]"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+  }
+  return $element;
+}
+
+/**
+ * Implement hook_form_field_ui_field_edit_form_alter().
+ */
+function pathauto_title_alias_form_field_ui_field_edit_form_alter(&$form, $form_state) {
+  // Hide cardinality because only 1 item makes sense.
+  $form['field']['cardinality']['#access'] = FALSE;
+}
+
+function _pathauto_title_alias_clean($text) {
+  // Include the pathauto library.
+  module_load_include('inc', 'pathauto');
+  // Clean the value.
+  $alias = pathauto_cleanstring($text);
+  return $alias;
+}

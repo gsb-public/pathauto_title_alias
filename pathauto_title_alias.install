@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Pathauto Title Alias module.
+ */
+
+/**
+ * Implements hook_field_schema().
+ */
+function pathauto_title_alias_field_schema($field) {
+  $columns = array(
+    'alias' => array(
+      'type' => 'varchar',
+      'length' => 256,
+      'not null' => FALSE,
+    ),
+    'use_autogenerate' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 1,
+    ),
+  );
+  return array(
+    'columns' => $columns,
+  );
+}

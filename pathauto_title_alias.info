@@ -1,0 +1,6 @@
+name = PathAuto Title Alias Field
+description = "Defines a field type that renders a configurable path alias for the title."
+package = Fields
+core = 7.x
+dependencies[] = field
+dependencies[] = pathauto
