@@ -122,7 +122,7 @@ function pathauto_title_alias_field_formatter_view($entity_type, $entity, $field
 function pathauto_title_alias_field_is_empty($item, $field) {
   if ($field['type'] == 'pathauto_title_alias') {
     // Only empty if the alias field is empty.
-    if (empty($item['alias'])) {
+    if (!empty($item['use_autogenerate']) && empty($item['alias'])) {
        return TRUE;
     }
   }
@@ -155,8 +155,17 @@ function pathauto_title_alias_field_validate($obj_type, $object, $field, $instan
 function pathauto_title_alias_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
   if ($field['type'] == 'pathauto_title_alias') {
     foreach($items as $delta => $item) {
+
+      // Get the title to use. Default to the alias field.
+      $title = $item['alias'];
+
+      // If autogenerate is checked then get the title from the node title.
+      if (!empty($item['use_autogenerate'])) {
+        $title = $entity->title;
+      }
+
       // Need to change the value into the pathauto version before save.
-      $items[$delta]['alias'] = _pathauto_title_alias_clean($item['alias']);
+      $items[$delta]['alias'] = _pathauto_title_alias_clean($title);
     }
   }
 }
