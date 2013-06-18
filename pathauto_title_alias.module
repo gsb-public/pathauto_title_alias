@@ -13,7 +13,7 @@ function pathauto_title_alias_menu() {
     'title' => 'Pathauto Title Alias Lookup',
     'page callback' => 'pathauto_title_alias_lookup',
     'page arguments' => array(1),
-    'access arguments' => array('generate pathauto title aliases'),
+    'access callback' => 'pathauto_title_alias_access',
     'type' => MENU_CALLBACK,
   );
 
@@ -21,8 +21,23 @@ function pathauto_title_alias_menu() {
 }
 
 /**
+ * Checks to see if the user has permission to generate aliases.
+ * Right now setting this to only authenticated users.
+ */
+function pathauto_title_alias_access() {
+  global $user;
+
+  if ($user->uid) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
  * Implements hook_permission().
  */
+/**
 function pathauto_title_alias_permission() {
   return array(
     'generate pathauto title aliases' => array(
@@ -31,6 +46,7 @@ function pathauto_title_alias_permission() {
     ),
   );
 }
+**/
 
 /**
  * Callback function for looking up the pathauto version of the alias.
