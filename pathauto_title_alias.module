@@ -120,12 +120,6 @@ function pathauto_title_alias_field_formatter_view($entity_type, $entity, $field
  * Implementation of hook_field_is_empty().
  */
 function pathauto_title_alias_field_is_empty($item, $field) {
-  if ($field['type'] == 'pathauto_title_alias') {
-    // Only empty if the alias field is empty.
-    if (!empty($item['use_autogenerate']) && empty($item['alias'])) {
-       return TRUE;
-    }
-  }
   return FALSE;
 }
 
