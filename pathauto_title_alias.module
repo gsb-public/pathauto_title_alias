@@ -223,6 +223,7 @@ function pathauto_title_alias_field_widget_form(&$form, &$form_state, $field, $i
 function pathauto_title_alias_form_field_ui_field_edit_form_alter(&$form, $form_state) {
   // Hide cardinality because only 1 item makes sense.
   $form['field']['cardinality']['#access'] = FALSE;
+  $form['instance']['required']['#access'] = FALSE;
 }
 
 function _pathauto_title_alias_clean($text) {
