@@ -215,9 +215,13 @@ function pathauto_title_alias_field_widget_form(&$form, &$form_state, $field, $i
  * Implement hook_form_field_ui_field_edit_form_alter().
  */
 function pathauto_title_alias_form_field_ui_field_edit_form_alter(&$form, $form_state) {
-  // Hide cardinality because only 1 item makes sense.
-  $form['field']['cardinality']['#access'] = FALSE;
-  $form['instance']['required']['#access'] = FALSE;
+  // Make sure we are only hiding fields for the pathauto_title_alias type.
+  if ($form['#field']['type'] == 'pathauto_title_alias') {
+    // Hide cardinality because only 1 item makes sense.
+    $form['field']['cardinality']['#access'] = FALSE;
+    // Hide required field because it's always required.
+    $form['instance']['required']['#access'] = FALSE;
+  }
 }
 
 function _pathauto_title_alias_clean($text) {
