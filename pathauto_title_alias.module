@@ -231,3 +231,41 @@ function _pathauto_title_alias_clean($text) {
   $alias = pathauto_cleanstring($text);
   return $alias;
 }
+
+/**
+ * Remove redirects pointing to aliases of the node it handles.
+ */
+function _pathauto_title_alias_duplicate_remove($redirect) {
+  $query = db_select('url_alias', 'u')
+          ->fields('u', array('alias'));
+  $query->join('redirect', 'r', 'u.alias = r.source');
+  $query->fields('r', array('rid'));
+
+  $results = $query->execute();
+  foreach ($results as $record) {
+    db_delete('redirect')
+            ->condition('rid', $record->rid)
+            ->execute();
+  }
+}
+
+/**
+ * Implements hook_redirect_presave().
+ */
+function pathauto_title_alias_redirect_presave($redirect) {
+  _pathauto_title_alias_duplicate_remove($redirect);
+}
+
+/**
+ * Implements hook_redirect_insert().
+ */
+function pathauto_title_alias_redirect_insert($redirect) {
+  _pathauto_title_alias_duplicate_remove($redirect);
+}
+
+/**
+ * Implements hook_redirect_update().
+ */
+function pathauto_title_alias_redirect_update($redirect) {
+  _pathauto_title_alias_duplicate_remove($redirect);
+}
